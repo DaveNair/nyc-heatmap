@@ -1,0 +1,218 @@
+---
+title: "NYC Rent Heatmap"
+author: "Dave Nair"
+date: "2025-03-28"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+My RMd doc for NYC Rent Heatmaps.
+
+# Data
+
+## NTA (Areas)
+
+```{r nta_data}
+#install.packages('sf')
+#install.packages('ggplot2')
+library(sf)
+library(ggplot2)
+
+filepath <- 'D:/Data/NYC/nynta2020_25a/nynta2020.shp'
+
+nta_shapefile <- st_read(filepath)
+print(head(nta_shapefile))
+
+#ggplot(data = nta_shapefile) + geom_sf() + ggtitle('NYC Neighborhood Tabulation Areas')
+```
+
+Furthermore, each of these polygons should be paired with a representative point (a centroid).
+
+```{r centroids}
+library(sf)
+
+nta_shapefile$centroid <- st_centroid(nta_shapefile$geometry)
+
+## let's also extract exact lat/lon
+coords <- st_coordinates(nta_shapefile$centroid)
+nta_shapefile$lon <- coords[,1]
+nta_shapefile$lat <- coords[,2]
+```
+
+## Rent (Metrics)
+
+Next we want Rent data.
+
+```{r rent_data}
+rentfile <- 'HUD_FY2025_FairMarketRent_50p_county.xls'
+
+rent_df <- readxl::read_excel(rentfile)
+rent_cols <- c('county_code','cntyname', 'hud_areaname', 'rent_50_0', 'rent_50_1', 'rent_50_2', 'rent_50_3', 'rent_50_4', 'hud_area_code', 'pop2020')
+
+nyc_counties <- c('Bronx County', 'Kings County', 'New York County', 'Queens County', 'Richmond County')
+rent_row_tf = rent_df$state_alpha == 'NY' & rent_df$cntyname %in% nyc_counties
+
+rent_df <- rent_df[ rent_row_tf, rent_cols]
+print(head(rent_df))
+```
+
+Great - so now we have some rent data. Let's join our data.
+
+# Mapping Rent to NTA
+
+We might need to build a crosswalk to get from Rent/County to Rent/NTA.
+
+```{r county_to_borough}
+library(dplyr)
+
+rent_df <- rent_df %>%
+  mutate(borough = case_when(
+    `cntyname` == "New York County"   ~ "Manhattan",
+    `cntyname` == "Kings County"      ~ "Brooklyn",
+    `cntyname` == "Queens County"     ~ "Queens",
+    `cntyname` == "Bronx County"      ~ "Bronx",
+    `cntyname` == "Richmond County"   ~ "Staten Island",
+    TRUE                                     ~ NA_character_
+  ))
+rent_df <- as.data.frame(rent_df)
+
+
+#nta_shapefile$BoroName <- as.character(nta_shapefile$BoroName)
+#rent_df$borough <- as.character(rent_df$borough)
+
+print(head(rent_df))
+```
+
+Now let's merge rent with areas and plot.
+
+```{r rent_per_nta, eval=TRUE}
+nta_shapefile <- merge(nta_shapefile, rent_df, by.x="BoroName", by.y="borough", all.x=TRUE)
+#nta_shapefile <- left_join(nta_shapefile, rent_df, by = c("BoroName","borough")) ## I COULD NOT GET THIS TO WORK?!
+
+ggplot(data = nta_shapefile) + 
+  #geom_sf(aes(fill=rent_50_1)) +
+  geom_sf(aes(fill=pop2020)) +
+  scale_fill_viridis_c(option='plasma', na.value="grey90") +
+  theme_minimal() +
+  #labs(title='HUD-Estimated 1BR Rent per NTA (2025)', fill='Rent ($)')
+  labs(title='2020 HUD Population per Borough', fill='Pop.')
+```
+
+
+Great! We have a mostly working heatmap (albeit now focused on Population).
+
+We can move onto adding Commuting Data!
+
+# Commuting Data
+
+## Via Google API
+
+Let's load our API Key.
+
+```{r gmaps_api}
+api_key <- Sys.getenv("GOOGLE_MAPS_API_KEY")
+if (api_key == "") stop("Missing Google Maps API key!")
+print(api_key)
+```
+
+## Via Randomized Values (temp)
+
+```{r random_commutes}
+set.seed(43)
+nta_shapefile$commute_minutes <- sample(15:60, size = nrow(nta_shapefile), replace = TRUE)
+```
+
+
+
+# Final Score
+
+Every location will have a final score that we will rank by. So this score might change.
+
+```{r score}
+## for now, score will simply be $Rent per Commute Time
+nta_shapefile$score <- nta_shapefile$rent_50_1 / nta_shapefile$commute_minutes
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Old
+
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r eruptions, echo=TRUE, eval=FALSE}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r tabsets, echo=TRUE, eval=FALSE}
+shinyAppDir(
+  system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+
+

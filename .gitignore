@@ -1,0 +1,14 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Envs and OS clutter
+.env
+.Renviron
+.DS_Store
+
+# Cache + large/intermediate data
+data/cache/
+
+# Personal scratch space
+GitIgnore/
