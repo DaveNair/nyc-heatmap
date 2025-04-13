@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import warnings
 import os
+from pathlib import Path
 
 import commute
 
@@ -17,10 +18,13 @@ CHOSEN_LAYER = SCORE_KEY
 VERBOSE = True
 VERBOSE_DETAILED = False
 
-FOLDER = 'D://Data/NYC/'
-NTA_GEOFILE = 'nynta2020_25a/nynta2020.shp'
-HUD_COUNTY_RENT_FILE = 'HUD_FY2025_FairMarketRent_50p_county.xls'
-MERGED_FILE = 'nyc-countyRent_perNTA.geojson' ## will be stored in 
+SCRIPT_PATH = Path(__file__).resolve().parent ## this is current wd of THIS FILE
+PARENT_PATH = SCRIPT_PATH.parent
+RAW_DATA_PATH = PARENT_PATH / "data" / "raw"
+OUTPUTS_PATH = PARENT_PATH / "outputs"
+NTA_GEOFILE = RAW_DATA_PATH / "nynta2020_25a" / "nynta2020.shp"
+HUD_COUNTY_RENT_FILE = RAW_DATA_PATH / "HUD_FY2025_FairMarketRent_50p_county.xls"
+MERGED_FILE = OUTPUTS_PATH / "nyc-countyRent_perNTA.geojson"
 NYC_COUNTIES = [i+' County' for i in 'Bronx,Kings,New York,Queens,Richmond'.split(',')]
 
 # getting out of HUD, NTA, and other datasource-specific stuff
@@ -88,10 +92,9 @@ def plot(dataframe, column, color='plasma', legend=True, keywords={'color':'ligh
 	plt.show()
 	return True
 
-def store_df(dataframe, outfile, outfolder='outputs', OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
+def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
 	'''Geopandas has a bad prettyprint - we'll be using json.'''
 	import json
-	outpath = f"{outfolder}/{outfile}"
 	if RemoveCols!=False:
 		outdf = dataframe.drop(columns=RemoveCols)
 	else:
