@@ -1,6 +1,6 @@
 # NYC Rent + Commute Heatmap
 
-![NYC Heatmap Preview](outputs/v1_Rent1BR_perZip.png)
+![NYC Heatmap Preview](outputs/v1.2_ScorePerZip.png)
 
 This project visualizes median rent and estimated commute time across NYC neighborhoods, helping renters identify areas with optimal trade-offs between cost and travel time.
 
@@ -39,9 +39,17 @@ Currently not packaged — rerun scripts in `scripts/` manually. Main script is 
 
 ### Updates
 
-Google Maps API completed
+#### Google Maps API completed
 
-[Rent per GMaps Commute Time](v0_RentPerCommute_LiveAPI.png)
+[Rent per GMaps Commute Time](v1.0_RentPerCommute_LiveAPI.png)
+
+#### ZCTA Upgrade completed
+
+[Rent per Zip, using Google Commute Time](v1.1_RentPerCommute_perZip.png)
+
+#### Display Configs added
+
+[Display configs added to simplify & scale mapping](v1.2_ScorePerZip.png)
 
 ## Future Plans
 
@@ -61,6 +69,7 @@ Google Maps API completed
 ## File Structure
 
 - `scripts/` – processing + analysis code
+- `config/` - code used for configs, like plotting defaults
 - `data/` – shapefiles and downloaded datasets
 - `output/` – merged GeoJSONs, CSV exports
 - `README.md` – project overview and goals
@@ -68,6 +77,7 @@ Google Maps API completed
 ### Version Milestones
 - `v1.0`: Borough-level rent & fake commute data
 - `v1.1-zcta-rent`: ZIP-level rent upgrade with real commute API
+- `v1.2-plot-config`: Added config settings to help display & scale
 
 ## Author Notes
 
