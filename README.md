@@ -1,5 +1,7 @@
 # NYC Rent + Commute Heatmap
 
+![NYC Heatmap Preview](outputs/v0_RentPerCommute_LiveAPI2.png)
+
 This project visualizes median rent and estimated commute time across NYC neighborhoods, helping renters identify areas with optimal trade-offs between cost and travel time.
 
 ## Project Goals
