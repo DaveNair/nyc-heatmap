@@ -7,16 +7,17 @@ import pandas as pd
 import warnings
 import os
 from pathlib import Path
+import sys
 
 import commute
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
+## INPUTS
+
 CHOSEN_BR_COUNT = 1
-COMMUTE_KEY = 'commute_minutes'
-SCORE_KEY = 'score'
-CHOSEN_LAYER = SCORE_KEY #; CHOSEN_LAYER = 'rent_1BR'
+CHOSEN_LAYER = 'score' #; CHOSEN_LAYER = 'rent_1BR'
 VERBOSE = True
-VERBOSE_DETAILED = True
+VERBOSE_DETAILED = False
 
 SCRIPT_PATH = Path(__file__).resolve().parent ## this is current wd of THIS FILE
 PARENT_PATH = SCRIPT_PATH.parent
@@ -37,6 +38,10 @@ POP_KEY = HUD_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population d
 ZCTA_COLUMN_RENAMES = {'ZCTA5CE10':'zcta', 
 	'ALAND10':'area_land','AWATER10':'area_water', 'INTPTLAT10':'lat_census', 'INTPTLON10':'lon_census', 
 	'geometry':'geometry'}
+
+## CONSTANTS
+COMMUTE_KEY = 'commute_minutes'
+SCORE_KEY = 'score'
 
 NYC_COUNTIES = [i+' County' for i in 'Bronx,Kings,New York,Queens,Richmond'.split(',')]
 NYC_ZIPS = ['10001', '10002', '10003', '10004', '10005', '10006', '10007', '10009', '10010',
@@ -62,28 +67,24 @@ NYC_ZIPS = ['10001', '10002', '10003', '10004', '10005', '10006', '10007', '1000
 
 
 # inputs are interpretted
+## we can add $PARENT_PATH to root, so we can run & import stuff inside
+sys.path.append(str(PARENT_PATH))
+import config.plot_config as plot_config
+
+## next, we'll interpret from the user inputs
 RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
-if CHOSEN_BR_COUNT==0:
-	RENT_TITLE = "Studio Rent ($)"
-else:
-	RENT_TITLE = f"{CHOSEN_BR_COUNT}BR Rent ($)"
+## now, we can iterpret titles with our plot_config.SETTINGS object - we don't even need these vars!
 
-TITLES = {
-	RENT_KEY : RENT_TITLE,
-	POP_KEY : 'Pop. (2020)',
-	COMMUTE_KEY : 'Commute Time (mins)',
-	SCORE_KEY : 'Score, Rent per Commute [$/min]'
-	}
-
+## these are just future options that the user can *choose from*. they will be changed and upgraded, in time
 MAP_LAYERS = {
-	RENT_TITLE: RENT_KEY,
-	TITLES[POP_KEY]:'pop_2020',
-	TITLES[COMMUTE_KEY]:'commute_minutes',
-	TITLES[SCORE_KEY]:'score'}
+	plot_config.SETTINGS[RENT_KEY]['label']: RENT_KEY,
+	# plot_config.SETTINGS[POP_KEY]['label']:'pop_2020',
+	plot_config.SETTINGS[COMMUTE_KEY]['label']:'commute_minutes',
+	plot_config.SETTINGS[SCORE_KEY]['label']:'score'}
 
 ## program interprets your choices; don't change below here
-CHOSEN_METRIC = MAP_LAYERS[TITLES[CHOSEN_LAYER]]
-TITLES[RENT_KEY] = RENT_TITLE ## just gonna messily add the Rent NBR value to titles now...
+## i think this was just fancy logic to return what the user had chosen... this will probably get fixed later
+CHOSEN_METRIC = CHOSEN_LAYER
 
 # IMPORTANT_COLUMNS = ['nta_id', 'nta_name', 'borough', 'geometry',
 # 	'centroid', 'lat', 'lon', RENT_KEY, POP_KEY, 
@@ -108,10 +109,28 @@ def sanity_check(dataframe, name=''):
 		return True
 	return False
 
-def plot(dataframe, column=CHOSEN_METRIC, color='plasma', legend=True, keywords={'color':'lightgrey'}):
-	global TITLES
-	dataframe.plot(column=column, cmap=color, legend=legend, missing_kwds=keywords)
-	plt.title(TITLES[column])
+def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
+	settings = plot_config.SETTINGS.get(column, {})
+	## let's interpret ALL settings
+	cmap = settings.get("colorscale", "viridis")
+	if settings.get("reverse_color", False):
+		cmap += '_r'
+	alpha = settings.get("alpha", 1)
+	vmin = settings.get("vmin", None)
+	vmax = settings.get("vmax", None)
+	label = settings.get("label", column)
+	units = settings.get("units", "")
+	fmt = settings.get("tooltip_fmt", "{:.0f}")
+	edge_color = settings.get("edge_color", "black")
+	edge_width = settings.get("edge_width", 0.1)
+
+	dataframe.plot(column=column, cmap=cmap, alpha=alpha, legend=legend, 
+		edgecolor=edge_color, linewidth=edge_width, 
+		vmin=vmin, vmax=vmax, missing_kwds=missing_kwds)
+
+	# Title: (example) "Rent per Commute Minute ($/min)"
+	title = f"{label} ({units})" if units else label
+	plt.title(title)
 	plt.show()
 	return True
 
