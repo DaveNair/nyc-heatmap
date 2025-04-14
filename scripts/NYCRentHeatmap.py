@@ -16,7 +16,7 @@ COMMUTE_KEY = 'commute_minutes'
 SCORE_KEY = 'score'
 CHOSEN_LAYER = SCORE_KEY
 VERBOSE = True
-VERBOSE_DETAILED = False
+VERBOSE_DETAILED = True
 
 SCRIPT_PATH = Path(__file__).resolve().parent ## this is current wd of THIS FILE
 PARENT_PATH = SCRIPT_PATH.parent
@@ -92,6 +92,54 @@ def plot(dataframe, column, color='plasma', legend=True, keywords={'color':'ligh
 	plt.show()
 	return True
 
+def file_exists(filepath):
+	return os.path.exists(filepath)
+
+def load_geoms(geomfile, RenameDict):
+	'''This function includes all transformations.'''
+	gdata = gpd.read_file(geomfile)
+	gdata = gdata.rename(columns=RenameDict)
+	gdata = gdata[list(RenameDict.values())+['geometry']]
+	# now our normalized keys should work
+	sanity_check(gdata, name='NTA')
+	#### add centroids to nta
+	gdata = gdata.to_crs(epsg=4326) ## coord ref system WGS84 (EPSG:4326)
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message='Geometry is in a geographic CRS.')
+		## UserWarning keeps getting thrown about calculating centroids 
+		gdata['centroid'] = gdata.geometry.centroid
+	gdata['lat'] = gdata['centroid'].y 
+	gdata['lon'] = gdata['centroid'].x
+	## after the centroid step, we've added an extra geom column - lets recast to prevent downstream issues
+	gdata = gpd.GeoDataFrame(gdata, geometry='geometry')
+	gdata.set_crs("EPSG:4326", inplace=True) # just re-enforcing crs
+	return gdata
+
+def load_rent(rentfile, RenameDict):
+	'''This function includes all transformations.'''
+	rdata = pd.read_excel(rentfile)
+	rdata = rdata.rename(columns=RenameDict)
+	rdata = rdata[RenameDict.values()]
+	## now RENT_KEY and others should work!
+	sanity_check(rdata, name='RENT')
+
+	## specifically for HUD Data, we still need to:
+	## - filter to NYC (state=NY && county.isin(counties))
+	## - add boroughs
+	rdata = rdata[
+		(rdata['state_alpha']=='NY') 
+		& (rdata['county_name'].isin(NYC_COUNTIES))
+		]
+
+	county_to_borough_dict = {'New York County':'Manhattan', 
+		'Kings County':'Brooklyn',
+		'Queens County':'Queens',
+		'Bronx County':'Bronx',
+		'Richmond County':'Staten Island'}
+
+	rdata['rent_borough'] = rdata['county_name'].map(county_to_borough_dict)
+	return rdata
+
 def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
 	'''Geopandas has a bad prettyprint - we'll be using json.'''
 	import json
@@ -117,79 +165,23 @@ def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=F
 
 # === MAIN ===
 
-## load-in data, convert to crs
-nta_gdf = gpd.read_file(NTA_GEOFILE)
-rent_df = pd.read_excel(HUD_COUNTY_RENT_FILE)
-## clean & rename
-nta_gdf = nta_gdf.rename(columns=NTA_COLUMN_RENAMES)
-rent_df = rent_df.rename(columns=HUD_COLUMN_RENAMES)
-nta_gdf = nta_gdf[list(NTA_COLUMN_RENAMES.values())+['geometry']]
-rent_df = rent_df[HUD_COLUMN_RENAMES.values()]
-## now RENT_KEY and others should work!
-sanity_check(nta_gdf, name='NTA'); sanity_check(rent_df, name='RENT')
+## check output (/cache)
+if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
+	print(f"Found cached output file: {MERGED_FILE}\nLoading file and skipping transformations...")
+	nta_gdf = gpd.read_file(MERGED_FILE)
+	plot(nta_gdf, SCORE_KEY)
+else:
+	## this is the MAIN
+	# load nta & rent
+	nta_gdf = load_geoms(NTA_GEOFILE, RenameDict=NTA_COLUMN_RENAMES)
+	rent_df = load_rent(HUD_COUNTY_RENT_FILE, RenameDict=HUD_COLUMN_RENAMES)
+	# merge
+	nta_gdf = nta_gdf.merge(rent_df, left_on='borough', right_on='rent_borough', how='left')
+	## apply google commute times & scores
+	nta_gdf[COMMUTE_KEY] = nta_gdf.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
+	nta_gdf[SCORE_KEY] = nta_gdf[RENT_KEY] / (nta_gdf[COMMUTE_KEY]+1)
+	plot(nta_gdf, SCORE_KEY)
+	store_df(nta_gdf, MERGED_FILE, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 
-## add cols, clean up, & merge
+print("Done! Hope you enjoyed!")
 
-## specifically for HUD Data, we still need to:
-## - filter to NYC (state=NY && county.isin(counties))
-## - add boroughs
-rent_df = rent_df[
-	(rent_df['state_alpha']=='NY') 
-	& (rent_df['county_name'].isin(NYC_COUNTIES))
-	]
-
-county_to_borough_dict = {'New York County':'Manhattan', 
-	'Kings County':'Brooklyn',
-	'Queens County':'Queens',
-	'Bronx County':'Bronx',
-	'Richmond County':'Staten Island'}
-
-rent_df['rent_borough'] = rent_df['county_name'].map(county_to_borough_dict)
-
-#### add centroids to nta
-nta_gdf = nta_gdf.to_crs(epsg=4326) ## coord ref system WGS84 (EPSG:4326)
-with warnings.catch_warnings():
-	warnings.filterwarnings("ignore", message='Geometry is in a geographic CRS.')
-	## a UserWarning keeps getting thrown about calculating centroids 
-	nta_gdf['centroid'] = nta_gdf.geometry.centroid
-
-nta_gdf['lat'] = nta_gdf['centroid'].y 
-nta_gdf['lon'] = nta_gdf['centroid'].x
-## after the centroid step, we've added an extra geom column - lets recast to prevent downstream issues
-nta_gdf = gpd.GeoDataFrame(nta_gdf, geometry='geometry')
-nta_gdf.set_crs("EPSG:4326", inplace=True) # just re-enforcing crs
-
-nta_gdf = nta_gdf.merge(rent_df, 
-	left_on='borough', right_on='rent_borough', how='left')
-
-# plot(nta_gdf, RENT_KEY)
-
-
-## Adding Commute Data
-## (via Google API)
-# check(nta_gdf[['nta_name','borough','centroid','lat','lon']], N=25)
-# print(nta_gdf.columns)
-# print(nta_gdf.shape)
-
-# nta_gdf = nta_gdf.head(5)
-nta_gdf[COMMUTE_KEY] = nta_gdf.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
-
-## load API key
-# import os
-# from dotenv import load_dotenv
-# load_dotenv() ## this will load the .env contents into env
-# api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-# if api_key is None:
-# 	raise ValueError("Missing Google Maps API Key!")
-# ## FINISH THIS!!
-
-# ## Randomized Data (temp, before Google API)
-# import numpy as np
-# np.random.seed(43)
-# nta_gdf[COMMUTE_KEY] = np.random.randint(15, 61, size=len(nta_gdf))
-
-## Now Score & Show
-nta_gdf[SCORE_KEY] = nta_gdf[RENT_KEY] / (nta_gdf[COMMUTE_KEY]+1)
-plot(nta_gdf, SCORE_KEY)
-
-store_df(nta_gdf, MERGED_FILE, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
