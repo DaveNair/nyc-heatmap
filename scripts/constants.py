@@ -1,14 +1,14 @@
 ## Constants, used in NYC Heatmap
 
-HUD_COLUMN_RENAMES = {'SAFMR\n1BR':'rent_1BR',
+RENT_COLUMN_RENAMES = {'SAFMR\n1BR':'rent_1BR',
 	'SAFMR\n0BR':'rent_0BR', 'SAFMR\n2BR':'rent_2BR', 'SAFMR\n3BR':'rent_3BR', 'SAFMR\n4BR':'rent_4BR',
 	# 'pop2020':'NULL', # 'state_alpha':'state_alpha',
 	'ZIP\nCode':'rent_zip', 'HUD Area Code':'hud_area_code', 'HUD Fair Market Rent Area Name':'hud_area_name'}
 
-# POP_KEY = HUD_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population data in this dataset... we could join later
+# POP_KEY = RENT_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population data in this dataset... we could join later
 POP_KEY = "pop2020"
 
-ZCTA_COLUMN_RENAMES = {'ZCTA5CE10':'zcta', 
+GEOM_COLUMN_RENAMES = {'ZCTA5CE10':'zcta', 
 	'ALAND10':'area_land','AWATER10':'area_water', 'INTPTLAT10':'lat_census', 'INTPTLON10':'lon_census', 
 	'geometry':'geometry'}
 

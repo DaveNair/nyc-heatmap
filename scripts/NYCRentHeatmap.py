@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 
 import commute
+from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, NYC_ZIPS
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
 ## INPUTS
@@ -21,20 +22,19 @@ VERBOSE_DETAILED = False
 
 ## INPUTS THAT DON'T CHANGE MUCH
 ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
-HUD_ZIP_RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
-MERGED_FILE = "nyc-ScorePerZCTA.geojson"
+RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
+MERGED_FILE = "nyc-ScorePerZCTA.geojson"; MERGED_FILE = "test.geojson"
 
 ## PATHS & FILENAMES SET
 PARENT_PATH = Path(__file__).resolve().parent.parent
 DATA_PATH = PARENT_PATH / "data"
 ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
-HUD_ZIP_RENT_FILE = DATA_PATH / "raw" / HUD_ZIP_RENT_FILE
+RENT_FILE = DATA_PATH / "raw" / RENT_FILE
 MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 
 ## we can add $PARENT_PATH to root, so we can run & import stuff inside
 sys.path.append(str(PARENT_PATH))
 import config.plot_config as plot_config
-
 
 # === FUNCTIONS ===
 
@@ -105,7 +105,6 @@ def load_geoms(geomfile, RenameDict):
 
 def load_rent(rentfile, RenameDict):
 	'''This function includes all transformations.'''
-	global NYC_ZIPS
 	rdata = pd.read_excel(rentfile)
 	rdata = rdata.rename(columns=RenameDict)
 	## now RENT_KEY and others should work!
@@ -139,8 +138,6 @@ def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=F
 	print(f"Could not write dataframe to location: {outpath}\nPlease check if the location already exists.")
 
 
-
-
 # === MAIN ===
 
 RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
@@ -153,8 +150,8 @@ if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
 else:
 	## this is the MAIN
 	# load nta & rent
-	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=ZCTA_COLUMN_RENAMES)
-	rent_df = load_rent(HUD_ZIP_RENT_FILE, RenameDict=HUD_COLUMN_RENAMES)
+	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES)
+	rent_df = load_rent(RENT_FILE, RenameDict=RENT_COLUMN_RENAMES)
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
 	## apply google commute times & scores
