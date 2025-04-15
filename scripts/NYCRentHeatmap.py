@@ -19,15 +19,17 @@ CHOSEN_LAYER = 'score' #; CHOSEN_LAYER = 'rent_1BR'
 VERBOSE = True
 VERBOSE_DETAILED = False
 
-SCRIPT_PATH = Path(__file__).resolve().parent ## this is current wd of THIS FILE
-PARENT_PATH = SCRIPT_PATH.parent
-DATA_PATH = PARENT_PATH / "data"
-OUTPUTS_PATH = PARENT_PATH / "outputs"
+## INPUTS THAT DON'T CHANGE MUCH
+ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
+HUD_ZIP_RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
+MERGED_FILE = "nyc-ScorePerZCTA.geojson"
 
-# FILENAMES BELOW
-ZCTA_GEOFILE = DATA_PATH / "processed" / "nyc_zcta" / "nyc_zcta_2020.shp"
-HUD_ZIP_RENT_FILE = DATA_PATH / "raw" / "HUD_FY2025_FairMarketRent_SmallArea.xls"
-MERGED_FILE = OUTPUTS_PATH / "nyc-ScorePerZCTA.geojson"
+## PATHS & FILENAMES SET
+PARENT_PATH = Path(__file__).resolve().parent.parent
+DATA_PATH = PARENT_PATH / "data"
+ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
+HUD_ZIP_RENT_FILE = DATA_PATH / "raw" / HUD_ZIP_RENT_FILE
+MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 
 # getting out of HUD, NTA, and other datasource-specific stuff
 POP_KEY = HUD_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population data in this dataset... we could join later
