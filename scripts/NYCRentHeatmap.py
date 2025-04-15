@@ -35,9 +35,6 @@ MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 sys.path.append(str(PARENT_PATH))
 import config.plot_config as plot_config
 
-## next, we'll interpret from the user inputs
-RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
-## now, we can iterpret titles with our plot_config.SETTINGS object - we don't even need these vars!
 
 # === FUNCTIONS ===
 
@@ -145,6 +142,8 @@ def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=F
 
 
 # === MAIN ===
+
+RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
 
 ## check output (/cache)
 if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
