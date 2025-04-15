@@ -21,8 +21,8 @@ def wait_and_retry(retry_counter, delay_time=RETRY_DELAY):
 	time.sleep(delay_time)
 
 def get_google_time(origin_lat, origin_lon, 
-		# destination="Times Square, New York, NY",
-		destination="40 Ludlow St, New York, NY 10002", 
+		destination="Times Square, New York, NY",
+		# destination="40 Ludlow St, New York, NY 10002", 
 		departure_time=True):
 	global google_api_key, VERBOSE, MAX_RETRIES, CHOSEN_DEPARTURE
 	if departure_time in [True,False,'DEFAULT','default']:
