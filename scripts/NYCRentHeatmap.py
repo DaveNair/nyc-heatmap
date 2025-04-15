@@ -15,7 +15,7 @@ import commute
 ## INPUTS
 
 CHOSEN_BR_COUNT = 1
-CHOSEN_LAYER = 'score' #; CHOSEN_LAYER = 'rent_1BR'
+CHOSEN_METRIC = 'score' #; CHOSEN_METRIC = 'rent_1BR'
 VERBOSE = True
 VERBOSE_DETAILED = False
 
@@ -31,33 +31,13 @@ ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
 HUD_ZIP_RENT_FILE = DATA_PATH / "raw" / HUD_ZIP_RENT_FILE
 MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 
-# getting out of HUD, NTA, and other datasource-specific stuff
-POP_KEY = HUD_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population data in this dataset... we could join later
-
-# inputs are interpretted
 ## we can add $PARENT_PATH to root, so we can run & import stuff inside
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(PARENT_PATH))
 import config.plot_config as plot_config
 
 ## next, we'll interpret from the user inputs
 RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
 ## now, we can iterpret titles with our plot_config.SETTINGS object - we don't even need these vars!
-
-## these are just future options that the user can *choose from*. they will be changed and upgraded, in time
-MAP_LAYERS = {
-	plot_config.SETTINGS[RENT_KEY]['label']: RENT_KEY,
-	# plot_config.SETTINGS[POP_KEY]['label']:'pop_2020',
-	plot_config.SETTINGS[COMMUTE_KEY]['label']:'commute_minutes',
-	plot_config.SETTINGS[SCORE_KEY]['label']:'score'}
-
-## program interprets your choices; don't change below here
-## i think this was just fancy logic to return what the user had chosen... this will probably get fixed later
-CHOSEN_METRIC = CHOSEN_LAYER
-
-# IMPORTANT_COLUMNS = ['nta_id', 'nta_name', 'borough', 'geometry',
-# 	'centroid', 'lat', 'lon', RENT_KEY, POP_KEY, 
-# 	'state_alpha', 'county_name']
-
 
 # === FUNCTIONS ===
 
