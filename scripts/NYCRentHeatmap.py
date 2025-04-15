@@ -34,7 +34,7 @@ POP_KEY = HUD_COLUMN_RENAMES.get('pop2020', 'NULL') # we don't have population d
 
 # inputs are interpretted
 ## we can add $PARENT_PATH to root, so we can run & import stuff inside
-sys.path.append(str(PARENT_PATH))
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config.plot_config as plot_config
 
 ## next, we'll interpret from the user inputs
