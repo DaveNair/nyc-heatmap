@@ -23,7 +23,7 @@ VERBOSE_DETAILED = False
 ## INPUTS THAT DON'T CHANGE MUCH
 ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
 RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
-MERGED_FILE = "nyc-ScorePerZCTA.geojson"; MERGED_FILE = "test.geojson"
+MERGED_FILE = "nyc-ScorePerZCTA.geojson"#; MERGED_FILE = "test.geojson"
 
 ## PATHS & FILENAMES SET
 PARENT_PATH = Path(__file__).resolve().parent.parent
@@ -156,7 +156,7 @@ else:
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
-	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)
+	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
 	plot(geom_df)#, SCORE_KEY)
 	store_df(geom_df, MERGED_FILE, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 
