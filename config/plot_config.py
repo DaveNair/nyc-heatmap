@@ -13,6 +13,28 @@ SETTINGS = {
         "tooltip_fmt": "{:.2f}",
         "normalize": False
     },
+    "gravity": {
+        "label": "Rent Dollars per Square Commute",
+        "units": "$/min^2",
+        "colorscale": "magma",
+        "alpha": 0.9,
+        "edgecolor": "white",
+        "interactive": True,
+        "tooltip_fmt": "{:.2f}",
+        "normalize": False
+    },
+    "antigravity": {
+        "label": "Square Commute per Rent",
+        "units": "min^2 per $",
+        "colorscale": "magma",
+        "alpha": 0.9,
+        "edgecolor": "white",
+        "vmin": 0,
+        "vmax": 100,
+        "interactive": True,
+        "tooltip_fmt": "{:.2f}",
+        "normalize": False
+    },
     "commute_minutes": {
         "label": "Commute Time to Times Square",
         "units": "min",

@@ -14,6 +14,8 @@ GEOM_COLUMN_RENAMES = {'ZCTA5CE10':'zcta',
 
 COMMUTE_KEY = 'commute_minutes'
 SCORE_KEY = 'score'
+GRAVIKEY = 'gravity'
+ANTIGRAV_KEY = 'antigravity'
 
 NYC_COUNTIES = [i+' County' for i in 'Bronx,Kings,New York,Queens,Richmond'.split(',')]
 NYC_ZIPS = ['10001', '10002', '10003', '10004', '10005', '10006', '10007', '10009', '10010',

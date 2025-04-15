@@ -10,13 +10,13 @@ from pathlib import Path
 import sys
 
 import commute
-from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, NYC_ZIPS
+from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
 ## INPUTS
 
 CHOSEN_BR_COUNT = 1
-CHOSEN_METRIC = 'score' #; CHOSEN_METRIC = 'rent_1BR'
+CHOSEN_METRIC = SCORE_KEY #; CHOSEN_METRIC = 'rent_1BR'
 VERBOSE = True
 VERBOSE_DETAILED = False
 
@@ -156,7 +156,8 @@ else:
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
-	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
+	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)
+	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
 	plot(geom_df)#, SCORE_KEY)
 	store_df(geom_df, MERGED_FILE, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 
