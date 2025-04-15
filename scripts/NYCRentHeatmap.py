@@ -27,7 +27,7 @@ OUTPUTS_PATH = PARENT_PATH / "outputs"
 # FILENAMES BELOW
 ZCTA_GEOFILE = DATA_PATH / "processed" / "nyc_zcta" / "nyc_zcta_2020.shp"
 HUD_ZIP_RENT_FILE = DATA_PATH / "raw" / "HUD_FY2025_FairMarketRent_SmallArea.xls"
-MERGED_FILE = OUTPUTS_PATH / "nyc-RentPerZCTA.geojson"
+MERGED_FILE = OUTPUTS_PATH / "nyc-LES-ScorePerZCTA.geojson"
 
 # getting out of HUD, NTA, and other datasource-specific stuff
 HUD_COLUMN_RENAMES = {'SAFMR\n1BR':'rent_1BR',
