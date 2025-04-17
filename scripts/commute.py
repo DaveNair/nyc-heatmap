@@ -5,7 +5,7 @@ import time
 from dotenv import load_dotenv
 load_dotenv() ## this will load the .env contents into env
 import retry_logic as retry 
-from retry_logic import MAX_RETRIES, MAX_API_CALLS
+from retry_logic import MAX_RETRIES, MAX_API_CALLS, run_with_retries
 
 CHOSEN_DEPARTURE = 'tomorrow'
 VERBOSE = False
@@ -35,33 +35,32 @@ def get_google_time(origin_lat, origin_lon,
 		f"&key={google_api_key}"
 	)
 	## send the request
-	## adding retries
-	for retry_attempt in range(MAX_RETRIES):
-		if API_COUNTER > MAX_API_CALLS:
-			print(f"Max API Calls reached. Aborting to prevent billing.")
-			return None
-
+	## build request sender
+	def call_api():
 		response = requests.get(url)
-		data = response.json()
-		status = data['status']
-		
-		if status == 'OK':
-			duration_sec = data["routes"][0]["legs"][0]["duration"]["value"]
-			duration_min = duration_sec // 60
-			if VERBOSE==True:
-				print(f"Estimated commute time: {duration_min} minutes")
-			return duration_min	
-		
-		elif status == 'ZERO_RESULTS':
-			if VERBOSE: print(f"No transit route found for ({origin_lat:.4f},{origin_lon:.4f})")
-			return None
-		
-		elif status in ['OVER_QUERY_LIMIT', 'UNKNOWN_ERROR']:
-			retry.wait(API_COUNTER) 
-		else:
-			print(f"API Error: {status} for ({origin_lat:.4f},{origin_lon:.4f}), after {retry_attempt} attempts")
-			break
+		return response.json # ie - data
+
+	def extract_google_status(json_data):
+		return json_data.get('status')
+
+	result = run_with_retries(
+		call_api,
+		label=f"({origin_lat},{origin_lon})",
+		retry_statuses=['OVER_QUERY_LIMIT', 'UNKNOWN_ERROR'],
+		extract_status_fn=extract_google_status
+		)
+
+	## after we move on w a successful (non-retry) result
+	if result['status'] == 'OK':
+		return round(result["routes"][0]["legs"][0]["duration"]["value"] / 60, 2)
+	elif result['status'] == 'ZERO_RESULTS':
+		if VERBOSE: print(f"No transit route found for ({origin_lat:.4f},{origin_lon:.4f})")
 		return None
+	else:
+		print(f"API Error: {result['status']} for ({origin_lat:.4f},{origin_lon:.4f}), after {retry_attempt} attempts")
+		return None
+
+	## adding retries
 
 ## example lat/lon (from NTA data)
 # origin_lat = 40.7831

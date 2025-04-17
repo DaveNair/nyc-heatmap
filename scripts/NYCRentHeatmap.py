@@ -61,6 +61,9 @@ def sanity_check(dataframe, name=''):
 def estimate_upcoming_api_calls(dataframe):
 	return False
 
+def prompt_user_for_confirmation(number_to_confirm, max_allowable=MAX_API_CALLS_PER_MONTH):
+	return False
+
 def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
 	settings = plot_config.SETTINGS.get(column, {})
 	## let's interpret ALL settings
