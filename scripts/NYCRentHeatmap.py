@@ -11,6 +11,8 @@ import sys
 
 import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS
+import retry_logic
+from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH, API_RUN_ALPHA, API_MONTHLY_ALPHA
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
 ## INPUTS
@@ -36,6 +38,8 @@ MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 sys.path.append(str(PARENT_PATH))
 import config.plot_config as plot_config
 
+CURRENT_CACHED_COUNTER = retry_logic.read_monthly_counter()
+
 # === FUNCTIONS ===
 
 def check(dataframe, name='', N=5):
@@ -52,6 +56,9 @@ def sanity_check(dataframe, name=''):
 		print(name)
 		print(dataframe.head())
 		return True
+	return False
+
+def estimate_upcoming_api_calls(dataframe):
 	return False
 
 def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
@@ -154,6 +161,10 @@ else:
 	rent_df = load_rent(RENT_FILE, RenameDict=RENT_COLUMN_RENAMES)
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
+	## before we run any commute api's, we can run a quick estimate 
+	number_of_upcoming_requests = estimate_upcoming_api_calls(geom_df)
+	if (number_of_upcoming_requests >= API_MONTHLY_ALPHA * MAX_API_CALLS_PER_MONTH) or (number_of_upcoming_requests >= API_RUN_ALPHA * MAX_API_CALLS_PER_RUN):
+		prompt_user_for_confirmation(number_of_upcoming_requests)
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
 	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)

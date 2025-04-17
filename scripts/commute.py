@@ -4,27 +4,20 @@ from datetime import datetime
 import time
 from dotenv import load_dotenv
 load_dotenv() ## this will load the .env contents into env
+import retry_logic as retry 
+from retry_logic import MAX_RETRIES, MAX_API_CALLS
 
 CHOSEN_DEPARTURE = 'tomorrow'
-
-MAX_RETRIES = 3
-RETRY_DELAY = 3
-MAX_API_CALLS = 500
-API_COUNTER = 0
 VERBOSE = False
 
 ## Loading the key
 google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
 
-def wait_and_retry(retry_counter, delay_time=RETRY_DELAY):
-	print(f"Retrying Attempt #{retry_counter+1} in {delay_time}s...")
-	time.sleep(delay_time)
-
 def get_google_time(origin_lat, origin_lon, 
 		destination="Times Square, New York, NY",
 		# destination="40 Ludlow St, New York, NY 10002", 
 		departure_time=True):
-	global google_api_key, VERBOSE, MAX_RETRIES, CHOSEN_DEPARTURE
+	# global google_api_key, VERBOSE, MAX_RETRIES, CHOSEN_DEPARTURE ## << i dont think this is needed ?
 	if departure_time in [True,False,'DEFAULT','default']:
 		if CHOSEN_DEPARTURE == 'now':
 			departure_time = int(datetime.now().timestamp())
@@ -64,7 +57,7 @@ def get_google_time(origin_lat, origin_lon,
 			return None
 		
 		elif status in ['OVER_QUERY_LIMIT', 'UNKNOWN_ERROR']:
-			wait_and_retry(API_COUNTER) 
+			retry.wait(API_COUNTER) 
 		else:
 			print(f"API Error: {status} for ({origin_lat:.4f},{origin_lon:.4f}), after {retry_attempt} attempts")
 			break
