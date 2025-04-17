@@ -12,7 +12,7 @@ import sys
 import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS
 import retry_logic
-from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH, API_RUN_ALPHA, API_MONTHLY_ALPHA
+from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_DAY, MAX_API_CALLS_PER_MONTH, API_RUN_ALPHA, API_DAILY_ALPHA, API_MONTHLY_ALPHA, MIN_API_LIMIT
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
 ## INPUTS
@@ -25,7 +25,8 @@ VERBOSE_DETAILED = False
 ## INPUTS THAT DON'T CHANGE MUCH
 ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
 RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
-MERGED_FILE = "nyc-ScorePerZCTA.geojson"#; MERGED_FILE = "test.geojson"
+MERGED_FILE = "nyc-ScorePerZCTA.geojson"
+MERGED_FILE = "test.geojson"
 
 ## PATHS & FILENAMES SET
 PARENT_PATH = Path(__file__).resolve().parent.parent
@@ -38,7 +39,9 @@ MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 sys.path.append(str(PARENT_PATH))
 import config.plot_config as plot_config
 
-CURRENT_CACHED_COUNTER = retry_logic.read_monthly_counter()
+MAX_API_CALLS_BEFORE_RUNWARN = MAX_API_CALLS_PER_RUN * API_RUN_ALPHA
+MAX_API_CALLS_BEFORE_DAILYWARN = MAX_API_CALLS_PER_DAY * API_DAILY_ALPHA
+MAX_API_CALLS_BEFORE_MONTHLYWARN = MAX_API_CALLS_PER_MONTH * API_MONTHLY_ALPHA
 
 # === FUNCTIONS ===
 
@@ -58,11 +61,43 @@ def sanity_check(dataframe, name=''):
 		return True
 	return False
 
-def estimate_upcoming_api_calls(dataframe):
-	return False
+def estimate_upcoming_api_calls(dataframe, dest_col=False, lat_col='lat', lon_col='lon', intro='Beginning API requests...'):
+	print("STOP HERE. MAKE THE FOLLOWING:")
+	print("estimate should ALSO know the Destination(s) that we are calling *to*, then multiply these numbers")
+	if intro:
+		print(intro)
+	unique_origins = len(df[[lat_col, lon_col]].dropna().drop_duplicates())
+	if dest_col==False:
+		unique_destinations = 1
+	else:
+		unique_destinations = len(df[[dest_col]].dropna().drop_duplicates())
+	current_estimate = unique_origins*unique_destinations
 
-def prompt_user_for_confirmation(number_to_confirm, max_allowable=MAX_API_CALLS_PER_MONTH):
-	return False
+	## print the usage & MAX as well, if this is verbose
+	if VERBOSE:
+		run_percentage = float(current_estimate) / MAX_API_CALLS_PER_RUN
+		monthly_percentage = float(current_estimate) / MAX_API_CALLS_PER_MONTH
+		print(f"Estimate results:\n\tUpcoming: \t{current_estimate}\n\tRun Max: \t{MAX_API_CALLS_PER_RUN} ({run_percentage*100:.1f}%)\n\tMonthly Max: \t{MAX_API_CALLS_PER_MONTH} ({monthly_percentage*100:.1f}%)")
+	raise
+	return current_estimate
+
+def prompt_user_for_confirmation(number_to_confirm):
+	if (number_to_confirm >= MAX_API_CALLS_BEFORE_MONTHLYWARN) or (number_of_upcoming_requests >= MAX_API_CALLS_BEFORE_RUNWARN) or VERBOSE_DETAILED:
+		monthly_percentage = float(number_to_confirm) / MAX_API_CALLS_PER_MONTH
+		run_percentage = float(number_to_confirm) / MAX_API_CALLS_PER_RUN
+		print(f"Detected large amount of upcoming API calls:\n\t{number_to_confirm} calls ({monthly_percentage*100:.1f} monthly max; {run_percentage*100:.1f} run max)")
+		## check user
+		user_input = False
+		while user_input==False or user_input[0]!='y':
+			user_input = input("Do you want to continue? [Y]es/[N]o\n?>> ").strip.lower()
+			if user_input=='':
+				## we will ASSUME the user is ok continuing and meant to click Yes...
+				user_input = 'y'
+			if user_input[0] in ['q','n']:
+				prtin("Exiting...")
+				sys.exit(1)
+		print("Continuing...")
+	pass
 
 def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
 	settings = plot_config.SETTINGS.get(column, {})
@@ -158,6 +193,7 @@ if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
 	geom_df = gpd.read_file(MERGED_FILE)
 	plot(geom_df)#, SCORE_KEY)
 else:
+	print(f"No merged-cache found. Beginning data load:\n\tGeom File:\t{ZCTA_GEOFILE}\n\tRent File:\t{RENT_FILE}")
 	## this is the MAIN
 	# load nta & rent
 	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES)
@@ -166,8 +202,10 @@ else:
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
 	## before we run any commute api's, we can run a quick estimate 
 	number_of_upcoming_requests = estimate_upcoming_api_calls(geom_df)
-	if (number_of_upcoming_requests >= API_MONTHLY_ALPHA * MAX_API_CALLS_PER_MONTH) or (number_of_upcoming_requests >= API_RUN_ALPHA * MAX_API_CALLS_PER_RUN):
-		prompt_user_for_confirmation(number_of_upcoming_requests)
+	prompt_user_for_confirmation(number_of_upcoming_requests)
+	API_RUN_COUNTER = 0
+	CURRENT_CACHED_COUNTER = retry_logic.read_monthly_counter()
+	## MOVE ABOVE INTO COMMUTE
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(lambda row: commute.get_google_time(row['lat'], row['lon']),axis = 1)
 	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)

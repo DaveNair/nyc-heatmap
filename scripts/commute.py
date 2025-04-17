@@ -38,14 +38,14 @@ def get_google_time(origin_lat, origin_lon,
 	## build request sender
 	def call_api():
 		response = requests.get(url)
-		return response.json # ie - data
+		return response.json() # ie - data
 
 	def extract_google_status(json_data):
 		return json_data.get('status')
 
 	result = run_with_retries(
 		call_api,
-		label=f"({origin_lat},{origin_lon})",
+		log_label=f"({origin_lat},{origin_lon})",
 		retry_statuses=['OVER_QUERY_LIMIT', 'UNKNOWN_ERROR'],
 		extract_status_fn=extract_google_status
 		)

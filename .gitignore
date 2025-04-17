@@ -12,3 +12,4 @@ data/cache/
 
 # Personal scratch space
 GitIgnore/
+*.log
