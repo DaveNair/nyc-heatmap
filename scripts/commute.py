@@ -2,16 +2,23 @@ import os
 import requests
 from datetime import datetime
 import time
+import numpy as np
 from dotenv import load_dotenv
 load_dotenv() ## this will load the .env contents into env
 import retry_logic as retry 
-from retry_logic import MAX_RETRIES, MAX_API_CALLS, run_with_retries
+from retry_logic import run_with_retries
+from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_DAY, MAX_API_CALLS_PER_MONTH, MIN_API_LIMIT
+from retry_logic import eMAX_API_PER_RUN, eMAX_API_PER_DAY, eMAX_API_PER_MONTH
 
 CHOSEN_DEPARTURE = 'tomorrow'
 VERBOSE = False
 
 ## Loading the key
 google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+
+## only works if this repo has been added to path
+from lib.utils import log_error
+from constants import BAD_VAL
 
 def get_google_time(origin_lat, origin_lon, 
 		destination="Times Square, New York, NY",
@@ -46,19 +53,28 @@ def get_google_time(origin_lat, origin_lon,
 	result = run_with_retries(
 		call_api,
 		log_label=f"({origin_lat},{origin_lon})",
-		retry_statuses=['OVER_QUERY_LIMIT', 'UNKNOWN_ERROR'],
+		retry_statuses=['UNKNOWN_ERROR'],
 		extract_status_fn=extract_google_status
 		)
+	status = result.get('status')
 
 	## after we move on w a successful (non-retry) result
-	if result['status'] == 'OK':
+	if status == 'OK':
 		return round(result["routes"][0]["legs"][0]["duration"]["value"] / 60, 2)
-	elif result['status'] == 'ZERO_RESULTS':
+	elif status == 'ZERO_RESULTS':
 		if VERBOSE: print(f"No transit route found for ({origin_lat:.4f},{origin_lon:.4f})")
-		return None
+		return np.nan
+
+	## after this, we should be recording the error
+	error_message = f"[{status}] - {url}"
+	log_error(error_message)
+	if status in ["NOT_FOUND", "MAX_WAYPOINTS_EXCEEDED", "INVALID_REQUEST", "OVER_QUERY_LIMIT"]:
+		return BAD_VAL
+	elif status == 'REQUEST_DENIED':
+		raise RuntimeError("API Access was rejected. Check API key & permissions. Exiting.")
 	else:
-		print(f"API Error: {result['status']} for ({origin_lat:.4f},{origin_lon:.4f}), after {retry_attempt} attempts")
-		return None
+		print(f"API Error: {result['status']} for ({origin_lat:.4f},{origin_lon:.4f}), after finishing retry_logic.run_with_retries()...")
+		return BAD_VAL
 
 	## adding retries
 
