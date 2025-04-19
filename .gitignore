@@ -9,6 +9,7 @@ __pycache__/
 
 # Cache + large/intermediate data
 data/cache/
+outputs/test*
 
 # Personal scratch space
 GitIgnore/

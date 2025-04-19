@@ -5,20 +5,16 @@ import time
 import numpy as np
 from dotenv import load_dotenv
 load_dotenv() ## this will load the .env contents into env
+from lib.utils import log_error
+from constants import BAD_VAL
 import retry_logic as retry 
 from retry_logic import run_with_retries
-from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_DAY, MAX_API_CALLS_PER_MONTH, MIN_API_LIMIT
-from retry_logic import eMAX_API_PER_RUN, eMAX_API_PER_DAY, eMAX_API_PER_MONTH
 
 CHOSEN_DEPARTURE = 'tomorrow'
 VERBOSE = False
 
 ## Loading the key
 google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-
-## only works if this repo has been added to path
-from lib.utils import log_error
-from constants import BAD_VAL
 
 def get_google_time(origin_lat, origin_lon, 
 		destination="Times Square, New York, NY",
@@ -75,8 +71,6 @@ def get_google_time(origin_lat, origin_lon,
 	else:
 		print(f"API Error: {result['status']} for ({origin_lat:.4f},{origin_lon:.4f}), after finishing retry_logic.run_with_retries()...")
 		return BAD_VAL
-
-	## adding retries
 
 ## example lat/lon (from NTA data)
 # origin_lat = 40.7831

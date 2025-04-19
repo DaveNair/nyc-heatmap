@@ -26,6 +26,7 @@ Built using Python 3.10, GeoPandas, Pandas, Matplotlib.
 - High-Res ZIP-level Rent estimates (0-4 BR)
 - Experimental scoring metric S: Dollars Paid (for Rent) per Commute Time (to Times Square)
 - Geospatial visualization of Scores per area
+- Retry logic has been added, and also checks for free-tier limits
 - Randomized, placeholder commute data to test pipeline (REMOVED)
 - Optional, Borough-level Rent estimates (0-4 BR) (REMOVED)
 
@@ -36,6 +37,7 @@ Currently not packaged — rerun scripts in `scripts/` manually. Main script is 
 ### Caching
 - Final merged GeoDataFrame is saved to `outputs/zcta_rent_commute.geojson`
 - If this file exists and `OVERWRITE` is set to `False`, the script will skip data loading/transformation.
+- Added caching to monitor free monthly API allowance
 
 ### Updates
 
@@ -53,11 +55,11 @@ Currently not packaged — rerun scripts in `scripts/` manually. Main script is 
 
 ## Future Plans
 
-- Add API caching & retry logic
 - Normalize scoring metrics
 - Add map layer interactivity (dropdown menu for toggling views)
 - Explore subway access or walkability overlays
 - Add options for Departure Time, other inputs
+- Add multi-destination functionality
 
 ### Future Branches
 
@@ -72,6 +74,7 @@ Currently not packaged — rerun scripts in `scripts/` manually. Main script is 
 - `config/` - code used for configs, like plotting defaults
 - `data/` – shapefiles and downloaded datasets
 - `output/` – merged GeoJSONs, CSV exports
+- `lib/` - now holds utils, which contains common functions
 - `README.md` – project overview and goals
 
 ### Version Milestones

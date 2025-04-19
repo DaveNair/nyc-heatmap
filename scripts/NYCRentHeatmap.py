@@ -4,6 +4,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import json
 import warnings
 import os
 from pathlib import Path
@@ -17,7 +18,7 @@ from lib import utils
 import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS, BAD_VAL
 import retry_logic
-from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_DAY, MAX_API_CALLS_PER_MONTH, eMAX_API_PER_RUN, eMAX_API_PER_DAY, eMAX_API_PER_MONTH, MIN_API_LIMIT
+from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH
 
 # == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
 ## INPUTS
@@ -71,13 +72,13 @@ def estimate_upcoming_api_calls(dataframe, dest_col=False, lat_col='lat', lon_co
 	## print the usage & MAX as well, if this is verbose
 	if VERBOSE:
 		run_percentage = float(current_estimate) / MAX_API_CALLS_PER_RUN
-		monthly_percentage = float(current_estimate) / MAX_API_CALLS_PER_MONTH
-		print(f"Upcoming API calls:\t{current_estimate}\n\tRun Max: \t{MAX_API_CALLS_PER_RUN} ({run_percentage*100:.1f}%)\n\tMonthly Max: \t{MAX_API_CALLS_PER_MONTH} ({monthly_percentage*100:.1f}%)\n")
+		monthly_percentage = float(_PERSISTED_PRECOUNTER+current_estimate) / MAX_API_CALLS_PER_MONTH
+		print(f"Upcoming API calls:\n\tRun Max: \t{current_estimate} \t\t/{MAX_API_CALLS_PER_RUN} ({run_percentage*100:.1f}%)\n\tMonthly Max: \t{current_estimate}+{_PERSISTED_PRECOUNTER} \t/{MAX_API_CALLS_PER_MONTH} ({monthly_percentage*100:.1f}%)\n")
 	return current_estimate
 
 def prompt_user_for_confirmation(number_to_confirm):
-	if (number_to_confirm >= eMAX_API_PER_MONTH) or (number_of_upcoming_requests >= eMAX_API_PER_RUN) or VERBOSE_DETAILED:
-		monthly_percentage = float(number_to_confirm) / MAX_API_CALLS_PER_MONTH
+	if (number_to_confirm >= MAX_API_CALLS_PER_RUN) or ((_PERSISTED_PRECOUNTER+number_to_confirm) >= MAX_API_CALLS_PER_MONTH) or VERBOSE_DETAILED:
+		monthly_percentage = float(_PERSISTED_PRECOUNTER+number_to_confirm) / MAX_API_CALLS_PER_MONTH
 		run_percentage = float(number_to_confirm) / MAX_API_CALLS_PER_RUN
 		print(f"Detected large amount of upcoming API calls:\n\t{number_to_confirm} calls ({monthly_percentage*100:.1f}% monthly max; {run_percentage*100:.1f}% run max)")
 		## check user
@@ -158,9 +159,8 @@ def load_rent(rentfile, RenameDict):
 
 def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
 	'''Geopandas has a bad prettyprint - we'll be using json.'''
-	import json
 	if outpath==True: 
-		outpath = utils.tempfile()
+		outpath = utils.tempfile(prefix=f"store_df-")
 	if RemoveCols!=False:
 		outdf = dataframe.drop(columns=RemoveCols)
 	else:
@@ -203,6 +203,7 @@ else:
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on='zcta', right_on='rent_zip', how='left')
 	## before we run any commute api's, we can run a quick estimate 
+	_PERSISTED_PRECOUNTER = retry_logic.get_counter()
 	number_of_upcoming_requests = estimate_upcoming_api_calls(geom_df)
 	prompt_user_for_confirmation(number_of_upcoming_requests)
 	## apply google commute times & scores
