@@ -123,7 +123,9 @@ def call_api_with_limits(df_row):
 	## check if limits are hit, & continue
 	if API_RUN_COUNTER>MAX_API_CALLS_PER_RUN or PERSISTED_COUNTER>MAX_API_CALLS_PER_MONTH:
 		decline_api_call()
-	output_time = get_google_time(df_row['lat'], df_row['lon'])
+	output_time = get_google_time(
+		df_row['lat'], df_row['lon'],
+		)
 	## if everything worked, increment our counters
 	increment_counters()
 	if VERBOSE and API_RUN_COUNTER%CALLS_PER_STATUS_MSG==0:

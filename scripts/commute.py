@@ -16,6 +16,9 @@ VERBOSE = False
 ## Loading the key
 google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
 
+def get_multi_google_times(origin_lat, origin_lon, list_of_destinations, departure_time=False):
+	return False
+
 def get_google_time(origin_lat, origin_lon, 
 		destination="Times Square, New York, NY",
 		# destination="40 Ludlow St, New York, NY 10002", 
