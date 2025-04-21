@@ -2,7 +2,6 @@
 ## by Dave Nair
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import pandas as pd
 import json
 import warnings
@@ -21,11 +20,8 @@ from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS,
 from config.settings import ANALYSIS_ZIPS
 
 ## PATHS & FILENAMES SET
-PARENT_PATH = Path(__file__).resolve().parent.parent
-DATA_PATH = PARENT_PATH / "data"
-ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
-RENT_FILE = DATA_PATH / "raw" / RENT_FILE
-MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
+## grab the precounter immediately
+_PERSISTED_PRECOUNTER = retry_logic.get_counter()
 
 
 # === FUNCTIONS ===
@@ -189,13 +185,12 @@ def run_analysis():
 	
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on=JOIN_SETTINGS['left_on'], right_on=JOIN_SETTINGS['right_on'], how=JOIN_SETTINGS['how'])
-	print("FINISHED MERGING"); sys.exit(1)
+	# print("FINISHED MERGING"); utils.check(geom_df)
 	
 	## before we run any commute api's, we can run a quick estimate 
-	_PERSISTED_PRECOUNTER = retry_logic.get_counter()
 	number_of_upcoming_requests = estimate_upcoming_api_calls(geom_df)
 	prompt_user_for_confirmation(number_of_upcoming_requests)
-	print("FINISHED PROMPTING"); sys.exit(1)
+	# print("FINISHED PROMPTING"); sys.exit(1)
 	
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(retry_logic.call_api_with_limits, axis=1) ## this function ASSUMES lat & lon columns
@@ -209,5 +204,5 @@ def run_analysis():
 	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
 	utils.plot_heatmap(geom_df, column=CHOSEN_METRIC)
 	
-	utils.store_df(geom_df, MERGED_FILE, outfolder=False, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
+	utils.store_df(geom_df, MERGED_FILE, outfolder=None, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 	return 

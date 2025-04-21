@@ -5,6 +5,7 @@ import geopandas as gpd
 import pandas as pd 
 import json
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 from config import plot_config
 from config.settings import VERBOSE, VERBOSE_DETAILED
@@ -33,15 +34,14 @@ def read_file(filename, filetype=None):
 	else:
 		raise ValueError(f"Unsupported file type: \t{filetype}.\nPlease check file: \t{filename}")
 
-def store_df(dataframe, outpath, outfolder=False, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
+def store_df(dataframe, outpath, outfolder=None, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
 	'''Geopandas has a bad prettyprint - we'll be using json.'''
 	if outpath==True: 
 		outpath = utils.tempfile(prefix=f"store_df-")
+	outpath = Path(outpath)
 	## apply optional folder
 	if outfolder:
 		outpath = Path(outfolder) / Path(outpath).name
-	else:
-		outpath = Path(outpath)
 	if RemoveCols!=False:
 		outdf = dataframe.drop(columns=RemoveCols)
 	else:

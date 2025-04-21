@@ -1,6 +1,7 @@
 ## Settings File for NYC Rent Heatmap
 ## by Dave Nair
 from scripts import constants
+from pathlib import Path
 
 ## I/O Settings
 ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
@@ -18,6 +19,12 @@ DESTINATIONS = {
 	'Sirovich': "331 E 12th St New York, NY 10003",
 	}
 CHOSEN_DEPARTURE = 'tomorrow'
+
+## Important Path settings
+REPO_PATH = Path(__file__).resolve().parent.parent
+DATA_PATH = REPO_PATH / "data"
+ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
+RENT_FILE = DATA_PATH / "raw" / RENT_FILE
 
 ## Logic settings
 JOIN_SETTINGS = {'left_on':'zcta', 'right_on':'rent_zip', 'how':'left'}
