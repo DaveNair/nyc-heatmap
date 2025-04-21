@@ -21,6 +21,7 @@ from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS,
 from config.settings import ANALYSIS_ZIPS
 
 ## PATHS & FILENAMES SET
+PARENT_PATH = Path(__file__).resolve().parent.parent
 DATA_PATH = PARENT_PATH / "data"
 ZCTA_GEOFILE = DATA_PATH / "processed" / ZCTA_GEOFILE
 RENT_FILE = DATA_PATH / "raw" / RENT_FILE
@@ -139,11 +140,11 @@ def load_rent(rentfile, RenameDict, AdditionalFilters=NYC_ZIPS):
 		if type(AdditionalFilters)==list:
 			## assume this is a list of zip codes, as per our latest geom
 			filter_col = 'rent_zip'
-			gdata = gdata[gdata[filter_col].isin(AdditionalFilters)].copy()
+			rdata = rdata[rdata[filter_col].isin(AdditionalFilters)].copy()
 		elif type(AdditionalFilters)==dict:
 			filter_col = list(AdditionalFilters.keys())[0]
 			filter_val = list(AdditionalFilters.values())[0]
-			gdata = gdata[gdata[filter_col].isin(filter_vals)].copy()
+			rdata = rdata[rdata[filter_col].isin(filter_vals)].copy()
 		else:
 			print(f"You have provided an unidentified type for AdditionalFilters: {type(AdditionalFilters)}\nPlease check again. Exiting."); sys.exit(1)
 	# we can add county-to-borough-to-zip logic some other time if we need to

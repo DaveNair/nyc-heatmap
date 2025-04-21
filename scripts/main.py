@@ -12,9 +12,14 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=ROOT / ".env")
 
 # --- Step 2: Main logic ---
-from config.settings import MERGED_FILE as OUTPUT_PATH
+from config.settings import MERGED_FILE
+from config.settings import OUTPUTS_FOLDER
 
 def main():
+	if OUTPUTS_FOLDER:
+		OUTPUT_PATH = ROOT / OUTPUTS_FOLDER / MERGED_FILE
+	else:
+		OUTPUT_PATH = ROOT / MERGED_FILE
 	if OUTPUT_PATH.exists():
 		print("Cached file found. Plotting directly...")
 		from lib.utils import plot_heatmap

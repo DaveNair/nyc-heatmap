@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from config import plot_config
+from config.settings import VERBOSE, VERBOSE_DETAILED
 
 
 ## I/O
@@ -77,7 +78,6 @@ def tempfile(prefix='tempfile-', suffix='.txt'):
 #### I/O Convenience
 
 def check(dataframe, name='', N=5):
-	global VERBOSE
 	if VERBOSE:
 		print(name)
 		print(dataframe.head(N))
@@ -85,7 +85,6 @@ def check(dataframe, name='', N=5):
 	return False
 
 def sanity_check(dataframe, name=''):
-	global VERBOSE_DETAILED
 	if VERBOSE_DETAILED:
 		print(name)
 		print(dataframe.head())

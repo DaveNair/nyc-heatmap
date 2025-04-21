@@ -8,6 +8,8 @@ RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
 MERGED_FILE = "nyc-ScorePerZCTA.geojson"
 MERGED_FILE = "test.geojson"
 
+OUTPUTS_FOLDER = None
+
 DESTINATION = "Times Square, New York, NY"
 DESTINATIONS = {
 	'Work': "410 Tenth Ave Manhattan, NY 10001",
@@ -18,7 +20,7 @@ DESTINATIONS = {
 CHOSEN_DEPARTURE = 'tomorrow'
 
 ## Logic settings
-RENT_JOIN_SETTINGS = {'left_on':'zcta', 'right_on':'rent_zip', 'how'='left'}
+JOIN_SETTINGS = {'left_on':'zcta', 'right_on':'rent_zip', 'how':'left'}
 ANALYSIS_ZIPS = constants.dn_interest_zips
 
 ## Decision settings
