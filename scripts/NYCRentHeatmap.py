@@ -19,15 +19,7 @@ import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS, BAD_VAL
 import retry_logic
 from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH
-from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS
-
-# == INPUTS, CONSTANTS, & UI PLACEHOLDERS ===
-## INPUTS
-
-CHOSEN_BR_COUNT = 1
-CHOSEN_METRIC = SCORE_KEY #; CHOSEN_METRIC = 'rent_1BR'
-VERBOSE = True
-VERBOSE_DETAILED = False
+from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS, CHOSEN_BR_COUNT, CHOSEN_METRIC, VERBOSE, VERBOSE_DETAILED
 
 ## PATHS & FILENAMES SET
 DATA_PATH = PARENT_PATH / "data"
@@ -182,6 +174,7 @@ def remove_bad_rows(dataframe, column, bad_val=BAD_VAL, badfile=False):
 
 def run_analysis():
 	print(f"Beginning data load:\n\tGeom File:\t{ZCTA_GEOFILE}\n\tRent File:\t{RENT_FILE}\n")
+	RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
 	
 	# load nta & rent
 	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES)
@@ -207,12 +200,10 @@ def run_analysis():
 	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
 	utils.plot(geom_df)#, SCORE_KEY)
 	
-	utils.store_df(geom_df, MERGED_FILE, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
+	utils.store_df(geom_df, MERGED_FILE, outfolder=False, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 	return False
 
 # === MAIN ===
-
-RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
 
 ## check output (/cache)
 if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
