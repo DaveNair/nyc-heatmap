@@ -62,6 +62,32 @@ brooklyn_zips = [
     '11233', '11234', '11235', '11236', '11237', '11238', '11239', '11241', '11243', '11249'
 ]
 
+brooklyn_zip_details = {
+    "Northwest": {
+        "zips": ['11201', '11205', '11206', '11211', '11217', '11222', '11249'],
+        "areas": ['Downtown', 'Williamsburg', 'Greenpoint']
+    },
+    "Central": {
+        "zips": ['11213', '11216', '11225', '11233', '11238'],
+        "areas": ['Crown Heights', 'Prospect Heights', 'Bedford-Stuyvesant']
+    },
+    "Southwest": {
+        "zips": ['11209', '11215', '11220', '11232'],
+        "areas": ['Park Slope', 'Sunset Park', 'Bay Ridge']
+    },
+    "South Central": {
+        "zips": ['11210', '11218', '11226', '11230'],
+        "areas": ['Flatbush', 'Midwood', 'Kensington']
+    },
+    "Southeast": {
+        "zips": [
+            '11203', '11204', '11207', '11208', '11212', '11214',
+            '11223', '11224', '11229', '11234', '11235', '11236', '11239'
+        ],
+        "areas": ['East New York', 'Canarsie', 'Sheepshead Bay', 'Brighton Beach']
+    }
+}
+
 # Queens (Queens County)
 queens_zips = [
     '11004', '11005', '11101', '11102', '11103', '11104', '11105', '11106', '11109', '11351',
