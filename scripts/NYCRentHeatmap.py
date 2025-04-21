@@ -130,16 +130,25 @@ def load_geoms(geomfile, RenameDict, AdditionalFilters=None):
 	sanity_check(gdata, name='NTA')
 	return gdata
 
-def load_rent(rentfile, RenameDict):
+def load_rent(rentfile, RenameDict, AdditionalFilters=NYC_ZIPS):
 	'''This function includes all transformations.'''
 	rdata = pd.read_excel(rentfile)
 	rdata = rdata.rename(columns=RenameDict)
 	## now RENT_KEY and others should work!
 	rdata = rdata[RenameDict.values()]
 	rdata['rent_zip'] = rdata['rent_zip'].astype(str).str.zfill(5)
-	## we still need to:
-	## - filter to NYC Zips
-	rdata = rdata[(rdata['rent_zip'].isin(NYC_ZIPS))]
+	## going to do Additional Filtering here -- including down to NYC_ZIPS, which it should do by default
+	if AdditionalFilters:
+		if type(AdditionalFilters)==list:
+			## assume this is a list of zip codes, as per our latest geom
+			filter_col = 'rent_zip'
+			gdata = gdata[gdata[filter_col].isin(AdditionalFilters)].copy()
+		elif type(AdditionalFilters)==dict:
+			filter_col = list(AdditionalFilters.keys())[0]
+			filter_val = list(AdditionalFilters.values())[0]
+			gdata = gdata[gdata[filter_col].isin(filter_vals)].copy()
+		else:
+			print(f"You have provided an unidentified type for AdditionalFilters: {type(AdditionalFilters)}\nPlease check again. Exiting."); sys.exit(1)
 	# we can add county-to-borough-to-zip logic some other time if we need to
 	sanity_check(rdata, name='RENT')
 	return rdata
@@ -178,7 +187,7 @@ def run_analysis():
 	
 	# load nta & rent
 	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES, AdditionalFilters=ANALYSIS_ZIPS)
-	rent_df = load_rent(RENT_FILE, RenameDict=RENT_COLUMN_RENAMES)
+	rent_df = load_rent(RENT_FILE, RenameDict=RENT_COLUMN_RENAMES, AdditionalFilters=ANALYSIS_ZIPS)
 	
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on=JOIN_SETTINGS['left_on'], right_on=JOIN_SETTINGS['right_on'], how=JOIN_SETTINGS['how'])
