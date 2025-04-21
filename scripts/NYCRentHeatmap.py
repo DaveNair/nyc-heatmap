@@ -94,30 +94,30 @@ def prompt_user_for_confirmation(number_to_confirm):
 		print("Continuing...")
 	pass
 
-def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
-	settings = plot_config.SETTINGS.get(column, {})
-	## let's interpret ALL settings
-	cmap = settings.get("colorscale", "viridis")
-	if settings.get("reverse_color", False):
-		cmap += '_r'
-	alpha = settings.get("alpha", 1)
-	vmin = settings.get("vmin", None)
-	vmax = settings.get("vmax", None)
-	label = settings.get("label", column)
-	units = settings.get("units", "")
-	fmt = settings.get("tooltip_fmt", "{:.0f}")
-	edge_color = settings.get("edge_color", "black")
-	edge_width = settings.get("edge_width", 0.1)
+# def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
+# 	settings = plot_config.SETTINGS.get(column, {})
+# 	## let's interpret ALL settings
+# 	cmap = settings.get("colorscale", "viridis")
+# 	if settings.get("reverse_color", False):
+# 		cmap += '_r'
+# 	alpha = settings.get("alpha", 1)
+# 	vmin = settings.get("vmin", None)
+# 	vmax = settings.get("vmax", None)
+# 	label = settings.get("label", column)
+# 	units = settings.get("units", "")
+# 	fmt = settings.get("tooltip_fmt", "{:.0f}")
+# 	edge_color = settings.get("edge_color", "black")
+# 	edge_width = settings.get("edge_width", 0.1)
 
-	dataframe.plot(column=column, cmap=cmap, alpha=alpha, legend=legend, 
-		edgecolor=edge_color, linewidth=edge_width, 
-		vmin=vmin, vmax=vmax, missing_kwds=missing_kwds)
+# 	dataframe.plot(column=column, cmap=cmap, alpha=alpha, legend=legend, 
+# 		edgecolor=edge_color, linewidth=edge_width, 
+# 		vmin=vmin, vmax=vmax, missing_kwds=missing_kwds)
 
-	# Title: (example) "Rent per Commute Minute ($/min)"
-	title = f"{label} ({units})" if units else label
-	plt.title(title)
-	plt.show()
-	return True
+# 	# Title: (example) "Rent per Commute Minute ($/min)"
+# 	title = f"{label} ({units})" if units else label
+# 	plt.title(title)
+# 	plt.show()
+# 	return True
 
 def file_exists(filepath):
 	return os.path.exists(filepath)
