@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=ROOT / ".env")
 
 # --- Step 2: Main logic ---
-from config.settings import OUTPUT_PATH
+from config.settings import MERGED_FILE as OUTPUT_PATH
 
 def main():
     if OUTPUT_PATH.exists():

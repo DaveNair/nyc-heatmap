@@ -28,6 +28,27 @@ def read_file(filename, filetype=None):
 	else:
 		raise ValueError(f"Unsupported file type: \t{filetype}.\nPlease check file: \t{filename}")
 
+def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
+	'''Geopandas has a bad prettyprint - we'll be using json.'''
+	if outpath==True: 
+		outpath = utils.tempfile(prefix=f"store_df-")
+	if RemoveCols!=False:
+		outdf = dataframe.drop(columns=RemoveCols)
+	else:
+		outdf = dataframe
+	if OVERWRITE!=True and not os.path.exists(outpath):
+		if PrettyPrint==False:
+			outdf.to_file(outpath, driver=DRIVER)
+		elif PrettyPrint==True:
+			## switch to json
+			geojson_dict = json.loads(outdf.to_json())
+			geojson_dict["crs"] = {"type": "name", "properties": {"name": "EPSG:4326"}} # preserving crs in json
+			with open(outpath.replace('.geojson','.json'), "w") as f:
+				json.dump(geojson_dict, f, indent=2)
+		print(f"Wrote dataframe to location: {outpath}")
+		return True
+	print(f"Could not write dataframe to location: {outpath}\nPlease check if the location already exists.")
+
 def log_error(message, filename='errors.log', timestamp=True):
 	if timestamp==True:
 		timestamp = f"{datetime.now()}:"
