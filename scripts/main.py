@@ -17,7 +17,7 @@ from config.settings import MERGED_FILE as OUTPUT_PATH
 def main():
 	if OUTPUT_PATH.exists():
 		print("Cached file found. Plotting directly...")
-		from lib.plot_utils import plot_heatmap
+		from lib.utils import plot_heatmap
 		plot_heatmap(OUTPUT_PATH)
 	else:
 		print("No cache found. Running full pipeline.")

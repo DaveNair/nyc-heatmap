@@ -5,10 +5,7 @@ import geopandas as gpd
 import pandas as pd 
 import json
 from pathlib import Path
-import sys
-## we can add $PARENT_PATH to root, so we can run & import stuff inside
-PARENT_PATH = Path(__file__).resolve().parent.parent
-sys.path.append(str(PARENT_PATH))
+
 from config import plot_config
 
 
