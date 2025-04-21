@@ -20,6 +20,7 @@ def get_multi_google_times(origin_lat, origin_lon, list_of_destinations, departu
 def get_google_time(origin_lat, origin_lon, 
 		destination=_DESTINATION_DEFAULT, 
 		departure_time=True):
+	'''Gets commute time for one pair of (lat,lon) against one single destination, at a given departure time.'''
 	if departure_time in [True,False,'DEFAULT','default']:
 		if CHOSEN_DEPARTURE == 'now':
 			departure_time = int(datetime.now().timestamp())

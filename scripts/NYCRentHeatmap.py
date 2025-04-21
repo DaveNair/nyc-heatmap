@@ -209,20 +209,7 @@ def run_analysis():
 	
 	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)
 	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
-	utils.plot(geom_df, column=CHOSEN_METRIC)
+	utils.plot_heatmap(geom_df, column=CHOSEN_METRIC)
 	
 	utils.store_df(geom_df, MERGED_FILE, outfolder=False, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
-	return False
-
-# === MAIN ===
-
-## check output (/cache)
-if MERGED_FILE not in [False,True] and file_exists(MERGED_FILE):
-	print(f"Found cached output file: {MERGED_FILE}\nLoading file and skipping transformations...\n")
-	geom_df = gpd.read_file(MERGED_FILE)
-	plot(geom_df)#, SCORE_KEY)
-else:
-	run_analysis()
-
-print("Done! Hope you enjoyed!")
-
+	return 
