@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from constants import BAD_VAL
 from lib import utils
+from config.settings import DESTINATION
 
 ## moving old vars - will remove soon
 MAX_RETRIES_PER_ENTRY = 3
@@ -125,6 +126,7 @@ def call_api_with_limits(df_row):
 		decline_api_call()
 	output_time = get_google_time(
 		df_row['lat'], df_row['lon'],
+		destination = DESTINATION
 		)
 	## if everything worked, increment our counters
 	increment_counters()

@@ -6,12 +6,10 @@ import numpy as np
 from dotenv import load_dotenv
 load_dotenv() ## this will load the .env contents into env
 from lib.utils import log_error
-from constants import BAD_VAL
+from constants import BAD_VAL, _DESTINATION_DEFAULT
 import retry_logic as retry 
 from retry_logic import run_with_retries
-
-CHOSEN_DEPARTURE = 'tomorrow'
-VERBOSE = False
+from config.settings import CHOSEN_DEPARTURE, VERBOSE_DETAILED
 
 ## Loading the key
 google_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -20,10 +18,8 @@ def get_multi_google_times(origin_lat, origin_lon, list_of_destinations, departu
 	return False
 
 def get_google_time(origin_lat, origin_lon, 
-		destination="Times Square, New York, NY",
-		# destination="40 Ludlow St, New York, NY 10002", 
+		destination=_DESTINATION_DEFAULT, 
 		departure_time=True):
-	# global google_api_key, VERBOSE, MAX_RETRIES, CHOSEN_DEPARTURE ## << i dont think this is needed ?
 	if departure_time in [True,False,'DEFAULT','default']:
 		if CHOSEN_DEPARTURE == 'now':
 			departure_time = int(datetime.now().timestamp())
@@ -61,7 +57,7 @@ def get_google_time(origin_lat, origin_lon,
 	if status == 'OK':
 		return round(result["routes"][0]["legs"][0]["duration"]["value"] / 60, 2)
 	elif status == 'ZERO_RESULTS':
-		if VERBOSE: print(f"No transit route found for ({origin_lat:.4f},{origin_lon:.4f})")
+		if VERBOSE_DETAILED: print(f"No transit route found for ({origin_lat:.4f},{origin_lon:.4f})")
 		return np.nan
 
 	## after this, we should be recording the error

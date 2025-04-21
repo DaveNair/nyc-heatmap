@@ -1,5 +1,11 @@
 ## Constants, used in NYC Heatmap
 
+## DEFAULTS
+
+_DESTINATION_DEFAULT = "Times Square, New York, NY"
+
+## CONSTANTS
+
 RENT_COLUMN_RENAMES = {'SAFMR\n1BR':'rent_1BR',
 	'SAFMR\n0BR':'rent_0BR', 'SAFMR\n2BR':'rent_2BR', 'SAFMR\n3BR':'rent_3BR', 'SAFMR\n4BR':'rent_4BR',
 	# 'pop2020':'NULL', # 'state_alpha':'state_alpha',
