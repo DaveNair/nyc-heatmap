@@ -15,6 +15,7 @@ sys.path.append(str(PARENT_PATH))
 
 from config import plot_config
 from lib import utils
+from lib.utils import check, sanity_check
 import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS, BAD_VAL
 import retry_logic
@@ -30,22 +31,6 @@ MERGED_FILE = PARENT_PATH / "outputs" / MERGED_FILE
 
 
 # === FUNCTIONS ===
-
-def check(dataframe, name='', N=5):
-	global VERBOSE
-	if VERBOSE:
-		print(name)
-		print(dataframe.head(N))
-		return True
-	return False
-
-def sanity_check(dataframe, name=''):
-	global VERBOSE_DETAILED
-	if VERBOSE_DETAILED:
-		print(name)
-		print(dataframe.head())
-		return True
-	return False
 
 def estimate_upcoming_api_calls(dataframe, dest_col=False, lat_col='lat', lon_col='lon', intro='Beginning API requests...\n'):
 	if intro:
@@ -129,6 +114,7 @@ def load_geoms(geomfile, RenameDict, AdditionalFilters=None):
 			gdata = gdata[gdata[filter_col].isin(filter_vals)].copy()
 		else:
 			print(f"You have provided an unidentified type for AdditionalFilters: {type(AdditionalFilters)}\nPlease check again. Exiting."); sys.exit(1)
+
 	#### add centroids to nta
 	gdata = gdata.to_crs(epsg=4326) ## coord ref system WGS84 (EPSG:4326) << WE MIGHT CHANGE THIS
 	with warnings.catch_warnings():
@@ -137,6 +123,7 @@ def load_geoms(geomfile, RenameDict, AdditionalFilters=None):
 		gdata['centroid'] = gdata.geometry.centroid
 	gdata['lat'] = gdata['centroid'].y 
 	gdata['lon'] = gdata['centroid'].x
+
 	## after the centroid step, we've added an extra geom column - lets recast to prevent downstream issues
 	gdata = gpd.GeoDataFrame(gdata, geometry='geometry')
 	gdata.set_crs("EPSG:4326", inplace=True) # just re-enforcing crs

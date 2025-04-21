@@ -77,6 +77,24 @@ def log_error(message, filename='errors.log', timestamp=True):
 def tempfile(prefix='tempfile-', suffix='.txt'):
 	return f"{prefix}{datetime.now()}{suffix}"
 
+#### I/O Convenience
+
+def check(dataframe, name='', N=5):
+	global VERBOSE
+	if VERBOSE:
+		print(name)
+		print(dataframe.head(N))
+		return True
+	return False
+
+def sanity_check(dataframe, name=''):
+	global VERBOSE_DETAILED
+	if VERBOSE_DETAILED:
+		print(name)
+		print(dataframe.head())
+		return True
+	return False
+
 ## Plotting
 
 def plot_heatmap(dataframe, column, legend=True, missing_kwds={'color':'lightgrey'}):
