@@ -20,6 +20,7 @@ from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCO
 import retry_logic
 from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH
 from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS, CHOSEN_BR_COUNT, CHOSEN_METRIC, VERBOSE, VERBOSE_DETAILED
+from config.settings import ANALYSIS_ZIPS
 
 ## PATHS & FILENAMES SET
 DATA_PATH = PARENT_PATH / "data"
@@ -109,13 +110,25 @@ def prompt_user_for_confirmation(number_to_confirm):
 def file_exists(filepath):
 	return os.path.exists(filepath)
 
-def load_geoms(geomfile, RenameDict):
+def load_geoms(geomfile, RenameDict, AdditionalFilters=None):
 	'''This function includes all transformations.'''
 	gdata = gpd.read_file(geomfile)
 	gdata = gdata.rename(columns=RenameDict)
 	# now our normalized keys should work
 	gdata = gdata[list(RenameDict.values())]
 	gdata['zcta'] = gdata['zcta'].astype(str).str.zfill(5)
+	## going to do Additional Filtering here
+	if AdditionalFilters:
+		if type(AdditionalFilters)==list:
+			## assume this is a list of zip codes, as per our latest geom
+			filter_col = 'zcta'
+			gdata = gdata[gdata[filter_col].isin(AdditionalFilters)].copy()
+		elif type(AdditionalFilters)==dict:
+			filter_col = list(AdditionalFilters.keys())[0]
+			filter_val = list(AdditionalFilters.values())[0]
+			gdata = gdata[gdata[filter_col].isin(filter_vals)].copy()
+		else:
+			print(f"You have provided an unidentified type for AdditionalFilters: {type(AdditionalFilters)}\nPlease check again. Exiting."); sys.exit(1)
 	#### add centroids to nta
 	gdata = gdata.to_crs(epsg=4326) ## coord ref system WGS84 (EPSG:4326) << WE MIGHT CHANGE THIS
 	with warnings.catch_warnings():
@@ -177,16 +190,18 @@ def run_analysis():
 	RENT_KEY = f"rent_{CHOSEN_BR_COUNT}BR"
 	
 	# load nta & rent
-	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES)
+	geom_df = load_geoms(ZCTA_GEOFILE, RenameDict=GEOM_COLUMN_RENAMES, AdditionalFilters=ANALYSIS_ZIPS)
 	rent_df = load_rent(RENT_FILE, RenameDict=RENT_COLUMN_RENAMES)
 	
 	# merge
 	geom_df = geom_df.merge(rent_df, left_on=JOIN_SETTINGS['left_on'], right_on=JOIN_SETTINGS['right_on'], how=JOIN_SETTINGS['how'])
+	print("FINISHED MERGING"); sys.exit(1)
 	
 	## before we run any commute api's, we can run a quick estimate 
 	_PERSISTED_PRECOUNTER = retry_logic.get_counter()
 	number_of_upcoming_requests = estimate_upcoming_api_calls(geom_df)
 	prompt_user_for_confirmation(number_of_upcoming_requests)
+	print("FINISHED PROMPTING"); sys.exit(1)
 	
 	## apply google commute times & scores
 	geom_df[COMMUTE_KEY] = geom_df.apply(retry_logic.call_api_with_limits, axis=1) ## this function ASSUMES lat & lon columns
@@ -198,7 +213,7 @@ def run_analysis():
 	
 	geom_df[SCORE_KEY] = geom_df[RENT_KEY] / (geom_df[COMMUTE_KEY]+1)
 	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
-	utils.plot(geom_df)#, SCORE_KEY)
+	utils.plot(geom_df, column=CHOSEN_METRIC)
 	
 	utils.store_df(geom_df, MERGED_FILE, outfolder=False, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 	return False

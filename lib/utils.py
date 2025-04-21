@@ -9,6 +9,7 @@ import sys
 ## we can add $PARENT_PATH to root, so we can run & import stuff inside
 PARENT_PATH = Path(__file__).resolve().parent.parent
 sys.path.append(str(PARENT_PATH))
+from config import plot_config
 
 
 ## I/O
@@ -78,7 +79,7 @@ def tempfile(prefix='tempfile-', suffix='.txt'):
 
 ## Plotting
 
-def plot_heatmap(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
+def plot_heatmap(dataframe, column, legend=True, missing_kwds={'color':'lightgrey'}):
 	if type(dataframe)==str:
 		dataframe = read_file(dataframe)
 	settings = plot_config.SETTINGS.get(column, {})
