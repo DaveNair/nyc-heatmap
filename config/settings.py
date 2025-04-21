@@ -9,7 +9,7 @@ RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
 MERGED_FILE = "nyc-ScorePerZCTA.geojson"
 MERGED_FILE = "test.geojson"
 
-OUTPUTS_FOLDER = None
+OUTPUTS_FOLDER = 'outputs'
 
 DESTINATION = "Times Square, New York, NY"
 DESTINATIONS = {

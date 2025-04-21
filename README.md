@@ -27,6 +27,7 @@ Built using Python 3.10, GeoPandas, Pandas, Matplotlib.
 - Experimental scoring metric S: Dollars Paid (for Rent) per Commute Time (to Times Square)
 - Geospatial visualization of Scores per area
 - Retry logic has been added, and also checks for free-tier limits
+- Code has now been structured with a settings file (`config/settings.py`)
 - Randomized, placeholder commute data to test pipeline (REMOVED)
 - Optional, Borough-level Rent estimates (0-4 BR) (REMOVED)
 

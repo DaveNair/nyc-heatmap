@@ -16,7 +16,7 @@ import commute
 from constants import RENT_COLUMN_RENAMES, GEOM_COLUMN_RENAMES, COMMUTE_KEY, SCORE_KEY, GRAVIKEY, ANTIGRAV_KEY, NYC_ZIPS, BAD_VAL
 import retry_logic
 from retry_logic import MAX_API_CALLS_PER_RUN, MAX_API_CALLS_PER_MONTH
-from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS, CHOSEN_BR_COUNT, CHOSEN_METRIC, VERBOSE, VERBOSE_DETAILED
+from config.settings import ZCTA_GEOFILE, RENT_FILE, MERGED_FILE, JOIN_SETTINGS, CHOSEN_BR_COUNT, CHOSEN_METRIC, VERBOSE, VERBOSE_DETAILED, OUTPUTS_FOLDER
 from config.settings import ANALYSIS_ZIPS
 
 ## PATHS & FILENAMES SET
@@ -60,31 +60,6 @@ def prompt_user_for_confirmation(number_to_confirm):
 				sys.exit(1)
 		print("Continuing...")
 	pass
-
-# def plot(dataframe, column=CHOSEN_METRIC, legend=True, missing_kwds={'color':'lightgrey'}):
-# 	settings = plot_config.SETTINGS.get(column, {})
-# 	## let's interpret ALL settings
-# 	cmap = settings.get("colorscale", "viridis")
-# 	if settings.get("reverse_color", False):
-# 		cmap += '_r'
-# 	alpha = settings.get("alpha", 1)
-# 	vmin = settings.get("vmin", None)
-# 	vmax = settings.get("vmax", None)
-# 	label = settings.get("label", column)
-# 	units = settings.get("units", "")
-# 	fmt = settings.get("tooltip_fmt", "{:.0f}")
-# 	edge_color = settings.get("edge_color", "black")
-# 	edge_width = settings.get("edge_width", 0.1)
-
-# 	dataframe.plot(column=column, cmap=cmap, alpha=alpha, legend=legend, 
-# 		edgecolor=edge_color, linewidth=edge_width, 
-# 		vmin=vmin, vmax=vmax, missing_kwds=missing_kwds)
-
-# 	# Title: (example) "Rent per Commute Minute ($/min)"
-# 	title = f"{label} ({units})" if units else label
-# 	plt.title(title)
-# 	plt.show()
-# 	return True
 
 def file_exists(filepath):
 	return os.path.exists(filepath)
@@ -147,27 +122,6 @@ def load_rent(rentfile, RenameDict, AdditionalFilters=NYC_ZIPS):
 	sanity_check(rdata, name='RENT')
 	return rdata
 
-# def store_df(dataframe, outpath, OVERWRITE=False, DRIVER="GeoJSON", RemoveCols=False, PrettyPrint=False):
-# 	'''Geopandas has a bad prettyprint - we'll be using json.'''
-# 	if outpath==True: 
-# 		outpath = utils.tempfile(prefix=f"store_df-")
-# 	if RemoveCols!=False:
-# 		outdf = dataframe.drop(columns=RemoveCols)
-# 	else:
-# 		outdf = dataframe
-# 	if OVERWRITE!=True and not os.path.exists(outpath):
-# 		if PrettyPrint==False:
-# 			outdf.to_file(outpath, driver=DRIVER)
-# 		elif PrettyPrint==True:
-# 			## switch to json
-# 			geojson_dict = json.loads(outdf.to_json())
-# 			geojson_dict["crs"] = {"type": "name", "properties": {"name": "EPSG:4326"}} # preserving crs in json
-# 			with open(outpath.replace('.geojson','.json'), "w") as f:
-# 				json.dump(geojson_dict, f, indent=2)
-# 		print(f"Wrote dataframe to location: {outpath}")
-# 		return True
-# 	print(f"Could not write dataframe to location: {outpath}\nPlease check if the location already exists.")
-
 def remove_bad_rows(dataframe, column, bad_val=BAD_VAL, badfile=False):
 	if badfile:
 		bad_df = dataframe[dataframe[COMMUTE_KEY]==BAD_VAL]
@@ -204,5 +158,5 @@ def run_analysis():
 	geom_df[GRAVIKEY] = geom_df[RENT_KEY] / ((geom_df[COMMUTE_KEY])**2+1)
 	utils.plot_heatmap(geom_df, column=CHOSEN_METRIC)
 	
-	utils.store_df(geom_df, MERGED_FILE, outfolder=None, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
+	utils.store_df(geom_df, MERGED_FILE, outfolder=OUTPUTS_FOLDER, OVERWRITE=False, RemoveCols=['centroid'], PrettyPrint=False)
 	return 

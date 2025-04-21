@@ -17,7 +17,7 @@ def read_file(filename, filetype=None):
 	if not filetype:
 		filetype = os.path.splitext(filename)[1].lower().strip('.')
 		# filetype = filename.split('.')[-1]
-	elif filetypein ['shp', 'json', 'geojson', 'gpkg']:
+	if filetype in ['shp', 'json', 'geojson', 'gpkg']:
 		return gpd.read_file(filename)
 	elif filetype in ['csv']:
 		return pd.read_csv(filename)
@@ -94,8 +94,13 @@ def sanity_check(dataframe, name=''):
 ## Plotting
 
 def plot_heatmap(dataframe, column, legend=True, missing_kwds={'color':'lightgrey'}):
-	if type(dataframe)==str:
+	'''Will interpret input and plot a geom-based heatmap, using the column for heat.'''
+	if isinstance(dataframe, (str, Path)):
 		dataframe = read_file(dataframe)
+	elif not isinstance(dataframe, (pd.DataFrame, gpd.GeoDataFrame)):
+		raise TypeError("Input must be a GeoDataFrame or a path to a geospatial file.")
+
+	## now that the input has been interpretted, we can continue - knowing things are dataframes
 	settings = plot_config.SETTINGS.get(column, {})
 	## let's interpret ALL settings
 	cmap = settings.get("colorscale", "viridis")
