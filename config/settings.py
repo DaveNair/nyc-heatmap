@@ -7,7 +7,6 @@ from pathlib import Path
 ZCTA_GEOFILE = "nyc_zcta_2020.shp" # these are actually multiple files that need to be next to each other
 RENT_FILE = "HUD_FY2025_FairMarketRent_SmallArea.xls"
 MERGED_FILE = "nyc-ScorePerZCTA.geojson"
-MERGED_FILE = "test.geojson"
 
 OUTPUTS_FOLDER = 'outputs'
 

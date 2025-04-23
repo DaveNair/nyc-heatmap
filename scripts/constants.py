@@ -63,7 +63,7 @@ brooklyn_zips = [
 ]
 
 brooklyn_zip_details = {
-    "Northwest": {
+    "North": {
         "zips": ['11201', '11205', '11206', '11211', '11217', '11222', '11249'],
         "areas": ['Downtown', 'Williamsburg', 'Greenpoint']
     },
@@ -71,15 +71,15 @@ brooklyn_zip_details = {
         "zips": ['11213', '11216', '11225', '11233', '11238'],
         "areas": ['Crown Heights', 'Prospect Heights', 'Bedford-Stuyvesant']
     },
-    "Southwest": {
+    "West": {
         "zips": ['11209', '11215', '11220', '11232'],
         "areas": ['Park Slope', 'Sunset Park', 'Bay Ridge']
     },
-    "South Central": {
+    "South": {
         "zips": ['11210', '11218', '11226', '11230'],
         "areas": ['Flatbush', 'Midwood', 'Kensington']
     },
-    "Southeast": {
+    "East": {
         "zips": [
             '11203', '11204', '11207', '11208', '11212', '11214',
             '11223', '11224', '11229', '11234', '11235', '11236', '11239'
@@ -117,7 +117,7 @@ other_nyc_adjacent_zips = [
     '10550', '10552', '10553', '11001', '11003', '11010', '11020', '11030', '11040', '11042', '11096'
 ]
 
-dn_interest_zips = manhattan_zips + brooklyn_zips + queens_zips
+dn_interest_zips = NYC_ZIPS # manhattan_zips + brooklyn_zip_details['North']['zips'] + brooklyn_zip_details['West']['zips'] + brooklyn_zip_details['Central']['zips'] # + queens_zips 
 
 
 BAD_VAL = -9999
